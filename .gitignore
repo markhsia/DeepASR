@@ -1,9 +1,4 @@
-*
-!Scripts
-!*.py
-!*.png
-!*.ipynb
-
+*.keras_weight
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
