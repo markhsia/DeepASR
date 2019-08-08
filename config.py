@@ -29,4 +29,4 @@ label_type = 'pinyin'
 
 #训练配置
 epochs = 500
-batch_size = 256
+batch_size = 64

@@ -1,10 +1,19 @@
-from pypinyin import pinyin, Style,load_phrases_dict
-load_phrases_dict({'嗯':[['ng2']]})
+from pypinyin import pinyin, Style,load_single_dict
+
 import json
 import os
 SAVE_DIR = os.path.dirname(__file__)
+PinYinTable_fp = os.path.join(SAVE_DIR, 'PinYinTable_modern.csv')
 pinyin2num_dict_fp = os.path.join(SAVE_DIR, 'pinyin2num_dict.json')
-PinYinTable_fp = os.path.join(SAVE_DIR, 'PinYinTable.csv')
+if os.path.basename(PinYinTable_fp) == 'PinYinTable_classic.csv':
+    load_single_dict({
+        ord('嗯'):'en2',
+        ord('哟'):'you4',
+        })
+else:
+    load_single_dict({
+        ord('嗯'):'ng2',
+        })
 def prepare_pinyinbase():
     tables = []
     with open(PinYinTable_fp, 'r', encoding='utf8') as f:

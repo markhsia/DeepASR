@@ -6,6 +6,7 @@ from Scripts.Models.AcousticModel import AcousticModel
 import json,os
 class AcousticTrainer:
     def __init__(self,
+        data_name:str,
         train_DataObjs,
         dev_DataObjs,
         test_DataObjs,
@@ -24,6 +25,7 @@ class AcousticTrainer:
         debug_epochs = 5,
         ):
         # 准备数据
+        self.data_name = data_name
         self.train_DataObjs = train_DataObjs
         self.dev_DataObjs = dev_DataObjs
         self.test_DataObjs = test_DataObjs
@@ -56,7 +58,7 @@ class AcousticTrainer:
             self.model_obj.load_weight(load_weight_path)
             print("读取模型权重:",load_weight_path)
         print("训练模型")
-        self.model_obj.fit(self.train_DataObjs, self.dev_DataObjs, batch_size=self.batch_size, epochs=self.epochs,patience = self.patience)
+        self.model_obj.fit(self.data_name,self.train_DataObjs, self.dev_DataObjs, batch_size=self.batch_size, epochs=self.epochs,patience = self.patience)
         
         print("测试模型")
         self.model_obj.test(self.test_DataObjs, batch_size=16, pre_n=5)
@@ -100,6 +102,7 @@ class AcousticTrainer:
 
 class AcousticTrainer_OneData(AcousticTrainer):
     def __init__(self,
+        data_name:str,
         DataOBJ,
         train_paths,
         dev_paths,
@@ -124,6 +127,7 @@ class AcousticTrainer_OneData(AcousticTrainer):
         test_DataObjs = make_AuDataObjs_list(DataOBJ, paths=test_paths)
 
         super().__init__(
+            data_name,
             train_DataObjs,
             dev_DataObjs,
             test_DataObjs,
@@ -135,9 +139,9 @@ class AcousticTrainer_OneData(AcousticTrainer):
             epochs,
             batch_size,
             patience,
-            model_save_dir = 'saved_models',
-            debug = False,
-            debug_data_num = 100,
-            debug_model_save_dir = 'debug/saved_models',
-            debug_epochs = 5
+            model_save_dir,
+            debug,
+            debug_data_num,
+            debug_model_save_dir,
+            debug_epochs 
             )

@@ -1,7 +1,21 @@
 from ..Data.AcousticData import AcousticData as AuDataObj
 from .tools import _md5,walk_subfiles
 import os
-import json,sys
+import json
+import sys
+import traceback
+from tqdm import tqdm
+
+AUDIO_TYPEs = ('.wav','.mp3','.aac')
+def make_AuDataObjs_gen(DataObj_class: AuDataObj, paths: list([str]), ignore_error_history = True):
+    error_datainfos = None if ignore_error_history else ERROR_DATA_INFO().error_infos
+    for fp in walk_subfiles(paths):
+        if os.path.splitext(fp)[1] in AUDIO_TYPEs:
+            if ignore_error_history or (fp not in error_datainfos):
+                yield DataObj_class(filepath=fp)
+
+def make_AuDataObjs_list(DataObj_class: AuDataObj, paths: list([str])):
+    return [data_obj for data_obj in make_AuDataObjs_gen(DataObj_class, paths)]
 
 class ERROR_DATA_INFO:
     def __init__(self,error_info_save_fp:str = 'ERROR_DATA_INFOs.csv'):
@@ -32,30 +46,33 @@ class ERROR_DATA_INFO:
                 error_datainfos[data_id] = (errortype,errorstr,desc)
         return error_datainfos
 
-AUDIO_TYPEs = ('.wav','.mp3','.aac')
-def make_AuDataObjs_gen(DataObj_class: AuDataObj, paths: list([str]), ignore_error_history = True):
-    error_datainfos = None if ignore_error_history else ERROR_DATA_INFO().error_infos
-    for fp in walk_subfiles(paths):
-        if os.path.splitext(fp)[1] in AUDIO_TYPEs:
-            if ignore_error_history or (fp not in error_datainfos):
-                yield DataObj_class(filepath=fp)
-
-def make_AuDataObjs_list(DataObj_class: AuDataObj, paths: list([str])):
-    return [data_obj for data_obj in make_AuDataObjs_gen(DataObj_class, paths)]
-
-import traceback
-from tqdm import tqdm
-def flite_vailed_dataObjs(DataObjs,dataparser,labelparser):
+def test_dataObjs(DataObjs,dataparser,labelparser,error_info_save_fp):
+    # 直接执行此文件将遍历测试一遍所有的数据，
+    # 有问题的单个数据id会自动被ERROR_DATA_INFO类持久化记录下来到一个文件中去，以后make_AuDataObjs_list载入时可选择略过
+    class ShorterThanLabelError(Exception):
+        '''当音频长度过短时,raise这个类
+        '''
+        pass
+    error_info = ERROR_DATA_INFO(error_info_save_fp)
     for data_obj in tqdm(DataObjs):
+        data = None
+        label = None
         try:
             data = dataparser(data_obj)
             label = labelparser(data_obj)
+            if data.shape[0]//8 < len(label):
+                raise ShorterThanLabelError("音频长度%d//8 小于 标签长度%d"%(data.shape[0],len(label)))
         except Exception as e:
-            data = None
-            label = None
-            traceback.print_exc()
-            err_fp = data_obj.filepath+'_'+repr(e)
-            print(data_obj.id,"重命名为:",err_fp)
-            os.rename(data_obj.filepath,err_fp)
-
+            print("\n=================\n出错data为:",data_obj.id)
+            error_info.save_error_info(data_obj.id)
+            try:
+                print("出错数据shape:",data.shape if data else None)
+                print("出错数据parsed_label为:",label)
+                print("出错数据文字为:",data_obj._get_one_text(data_obj.filepath))
+                print("出错数据label为:",data_obj.get_label())
+            except:
+                pass
+            print("\t****错误信息****")
+            print(traceback.format_exc().replace('\n','\n\t'))
+            print("\n=================\n")
 

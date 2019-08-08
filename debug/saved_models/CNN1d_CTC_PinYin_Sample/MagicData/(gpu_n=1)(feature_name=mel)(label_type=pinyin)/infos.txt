@@ -1,0 +1,15 @@
+=====模型信息=====
+gpu_n:1
+feature_name:mel
+label_type:pinyin
+data_name:MagicData
+train_data_num:100
+dev_data_num:100
+feature:{'name': 'mel', 'kwargs': {'fft_s': 0.128, 'hop_s': 0.016, 'target_sr': 8000, 'n_mels': 128}}
+ModelOBJ_name:CNN1d_CTC_PinYin_Sample
+model_name:CNN1d_CTC_PinYin_Sample
+max_epochs:5
+batch_size:256
+cur_model_savedir:debug/saved_models/CNN1d_CTC_PinYin_Sample/MagicData/(gpu_n=1)(feature_name=mel)(label_type=pinyin)
+load_weight_path:None
+=================

@@ -39,7 +39,7 @@ class AcousticDataParser(BaseDataParser):
             for k,v in feature['kwargs'].items():
                 sub_dir += '(%s=%s)'%(k,v)
             self.cur_cache_dir = os.path.join(self.main_cache_dir,sub_dir)
-            print("开启缓存1\n\t缓存主文件夹:%s\n\t当前缓存文件夹:%s"%(self.main_cache_dir,self.cur_cache_dir))
+            print("开启缓存!\n\t缓存主文件夹:%s\n\t当前缓存文件夹:%s"%(self.main_cache_dir,self.cur_cache_dir))
             if not os.path.exists(self.cur_cache_dir):
                 print("创建文件夹:",self.cur_cache_dir)
                 os.makedirs(self.cur_cache_dir)
@@ -62,6 +62,8 @@ class AcousticDataParser(BaseDataParser):
         else:
             raise Exception(
                 "AcousticDataParser.Feature_funcs不存在%s特征" % feature['name'])
+        
+        input("请确认以上信息,按任意键继续...")
 
 
     def parse_one_data(self, au_data_obj: AuDataObj):
