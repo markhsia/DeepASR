@@ -20,6 +20,6 @@ if __name__ == '__main__':
             (PrimewordsData,"/data/speech/Primewords/primewords_md_2018_set1/audio_files/0/00/000017e3-c450-4ec6-ae77-d1e8a6a57897.wav"),
             (Thchs30Data,"/data/speech/thchs30/openslr_format/data_thchs30/train/A11_0.wav"),
             (ST_CMDSData,"/data/speech/ST-CMDS/ST-CMDS-20170001_1-OS/20170001P00191A0008.wav"),
-            (MagicData,"/data/speech/MAGICDATA/dev/38_5731/38_5731_20170915091709.wav")
+            (MagicData,"/data/speech/MAGICDATA/train/16_3629/16_3629_20170812163752.wav")
         ):
         test_DataOBJ(DataOBJ,example_fp)

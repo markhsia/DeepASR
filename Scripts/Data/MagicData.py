@@ -2,7 +2,8 @@ import os
 import json
 from .AcousticData import AcousticData
 from typing import List
-magic_train_trans_fp = "/data/speech/MAGICDATA/train/TRANS.txt"
+magic_train_trans_fp = "/data/speech/MAGICDATA/train/TRANS_debuged.txt"
+# /data/speech/MAGICDATA/train/16_3629/16_3629_20170812163752.wav 标签是67个"么"，但实际上人工去听标签应该是:"么么么么么么么么么么么么么么么么么摸喔么么喔么喔呜么呜喔"
 magic_dev_trans_fp = "/data/speech/MAGICDATA/dev/TRANS.txt"
 magic_test_trans_fp = "/data/speech/MAGICDATA/test/TRANS.txt"
 
