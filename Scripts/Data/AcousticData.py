@@ -11,26 +11,23 @@ class PureAcousticData(BaseData):
         ori_y, ori_sr = librosa.load(self.filepath, sr=None)
         return ori_y, ori_sr
     
-    def get_label(self):
-        return None
+    def get_label(self,label_type):
+        return []
 
 
 class AcousticData(PureAcousticData):
 
-    def __init__(self, filepath, label_type='pinyin'):
+    def __init__(self, filepath):
         super().__init__(filepath=filepath)
+        
+        self.get_label_funcs ={
+            'text':self._get_one_text,
+            'pinyin':self._get_one_pinyin_list,
+            'phone':self._get_one_phone_list
+        }
 
-        # label
-        self.label_type = label_type
-        if self.label_type == 'pinyin':
-            self.get_label_func = self._get_one_pinyin_list
-        elif self.label_type == 'phone':
-            self.get_label_func = self._get_one_phone_list
-        else:
-            raise Exception("LabelType:%s 不存在" % self.label_type)
-
-    def get_label(self):
-        return self.get_label_func(self.filepath)
+    def get_label(self,label_type):
+        return self.get_label_funcs[label_type](self.filepath)
 
     @abstractmethod
     def _get_one_text(self, audio_fp):

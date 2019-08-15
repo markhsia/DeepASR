@@ -138,20 +138,18 @@ class AcousticLabelParser(BaseLabelParser):
 
     def parse_one_label(self, au_data_obj: AuDataObj):
         try:
-            res = self.encode_label(au_data_obj.get_label())
+            res = self.encode_label(au_data_obj.get_label(self.label_type))
         except Exception as e:
             try:
                 print("出错数据为:%s"%(au_data_obj.id))
                 print("出错数据文字为:",au_data_obj._get_one_text(au_data_obj.filepath))
-                print("出错数据label为:",au_data_obj.get_label())
+                print("出错数据label为:",au_data_obj.get_label(self.label_type))
             except:
                 pass
             raise e
         return res
 
     def encode_label(self, label):
-        if label is None:
-            return [0]
         return self.encode_label_func(label)
 
     def decode_label(self, encoded_label):

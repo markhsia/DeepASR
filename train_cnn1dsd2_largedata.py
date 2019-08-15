@@ -1,5 +1,5 @@
 from config import model_save_dir, cache_dir, feature, stft_fea, mel_fea, label_type,batch_size
-from Scripts.Models.CNN1d_CTC import CNN1d_CTC_PinYin_Sample
+from Scripts.Models.CNN1d_CTC import CNN1d_CTC_PinYin_Sample_Dropout2
 
 from train import AcousticTrainer
 
@@ -16,11 +16,11 @@ if __name__ == '__main__':
         feature = mel_fea,# !!!
         data_cache_dir = cache_dir,
         label_type = 'pinyin',
-        ModelOBJ = CNN1d_CTC_PinYin_Sample,# !!!
-        Model_name = 'CNN1d_CTC_PinYin_Sample',# !!!
+        ModelOBJ = CNN1d_CTC_PinYin_Sample_Dropout2,# !!!
+        Model_name = 'CNN1d_CTC_PinYin_Sample_Dropout2',# !!!
         epochs = 500,
         batch_size = batch_size,
-        patience = 20,
+        patience = 50,
         model_save_dir = model_save_dir,
         debug = False,
         debug_data_num = 100,

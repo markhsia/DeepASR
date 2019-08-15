@@ -1,6 +1,6 @@
 # 文件夹配置
 model_save_dir = 'saved_models'
-cache_dir = '/data/A/cache'
+cache_dir = '/ext/A/cache'
 
 # 数据配置
 

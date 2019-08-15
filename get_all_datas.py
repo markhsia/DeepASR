@@ -17,7 +17,7 @@ Aidatatang_base_path = '/data/speech/Aidatatang/aidatatang_200zh/corpus/'
 
 Thchs30_base_path = '/data/speech/thchs30/openslr_format/data_thchs30/'
 
-# MagicData_base_path = '/data/speech/MAGICDATA/'
+MagicData_base_path = '/data/speech/MAGICDATA/'
 
 ST_CMDS_path = "/data/speech/ST-CMDS/ST-CMDS-20170001_1-OS/"
 
@@ -33,7 +33,7 @@ for (DataOBJ,base_path) in (
         (AiShellData,Aishell_base_path),
         (AiDataTang,Aidatatang_base_path),
         (Thchs30Data,Thchs30_base_path),
-        # (MagicData,MagicData_base_path),
+        (MagicData,MagicData_base_path),
     ):
     print("列出%s样本"%(DataOBJ.__name__))
     trains = make_AuDataObjs_list(DataOBJ, paths=[base_path+'train/'])

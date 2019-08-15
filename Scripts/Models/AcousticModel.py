@@ -11,12 +11,27 @@ class AcousticModel(KerasCTCBaseModel):
         super().__init__(name, dataparser,labelparser,save_dir)
        
     @abstractmethod
-    def _get_attr_dict4subdir(self):
-        return {
+    def _create_fit_infos_dict(self,data_name,train_DataObjIter,dev_DataObjIter,batch_size,epochs):
+        fit_infos_dict = {
+            'gpu_n':self.gpu_num,
+            'data_name': data_name,
+            'train_data_num':len(train_DataObjIter),
+            'dev_data_num':len(dev_DataObjIter),
+            'feature':self.DataParser.feature,
+            'label_type':self.LabelParser.label_type,
+            'ModelOBJ_name':self.__class__.__name__,
+            'model_name':self.name,
+            'max_epochs':epochs,
+            'batch_size':batch_size,
+            'load_weight_path':self.load_weight_path,
+            'main_save_dir':self.main_save_dir,
+        }
+        abstract_infos_dict = {
             'gpu_n':self.gpu_num,
             'feature_name' : self.DataParser.feature['name'],
             'label_type' :self.LabelParser.label_type        
         }
+        return fit_infos_dict,abstract_infos_dict
         
     @abstractmethod
     def main_structure(self,input_layername):
@@ -37,7 +52,7 @@ class AcousticModel(KerasCTCBaseModel):
         wer_sum = 0
         test_n = len(test_DataObjIter)
         for data_obj in test_DataObjIter:
-            true_label = data_obj.get_label()
+            true_label = data_obj.get_label(self.LabelParser.label_type)
             pred_label = self.predict(data_obj)
             print('\n==========')
             print('识别音频文件：%s' % data_obj.filepath)
@@ -53,7 +68,7 @@ class AcousticModel(KerasCTCBaseModel):
     def test_wer(self,test_DataObjIter):
         wer_sum = 0
         for data_obj in test_DataObjIter:
-            true_label = data_obj.get_label()
+            true_label = data_obj.get_label(self.LabelParser.label_type)
             pred_label = self.predict(data_obj)        
             w = wer(true_label,pred_label)
             wer_sum += w

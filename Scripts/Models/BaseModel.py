@@ -1,23 +1,19 @@
-from .DataParsers.BaseParser import BaseDataParser, BaseLabelParser
-
-import os
-import math
+import os, math, json, shutil, traceback
 from keras.utils.generic_utils import unpack_singleton, to_list
-from keras.utils import Sequence
+from keras.utils import Sequence,print_summary
 from tqdm import tqdm
 import numpy as np
 from abc import abstractmethod
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-import traceback
-from ..Data.BaseData import BaseData as DataObj
-import shutil
-import json
-from ..utils.others import ERROR_DATA_INFO
-error_info = ERROR_DATA_INFO('magic_error_infos.jsons')
 plt.rcParams['font.sans-serif'] = ['SimHei']  # 步骤一（替换sans-serif字体）
 plt.rcParams['axes.unicode_minus'] = False   # 步骤二（解决坐标轴负数的负号显示问题）
+
+from .DataParsers.BaseParser import BaseDataParser, BaseLabelParser
+from ..Data.BaseData import BaseData as DataObj
+from ..utils.others import ERROR_DATA_INFO
+error_info = ERROR_DATA_INFO('data_error_infos_in_fitting.jsons')
 
 PADDED_DATAS_NAME = 'padded_datas'
 PADDED_LABELS_NAME = 'padded_labels'
@@ -25,30 +21,6 @@ DATA_LENGTHS_NAME = 'data_lengths'
 LABEL_LENGHTS_NAME = 'label_lengths'
 CTC_LOSS_NAME = 'CTC_loss'
 
-
-# class DataLabelGen:
-#     def __init__(self, DataObjIter, DataParser: BaseDataParser, LabelParser: BaseDataParser):
-#         self.ordered = DataObjIter.ordered
-#         self.DataObjIter = DataObjIter
-#         self.DataParser = DataParser
-#         self.LabelParser = LabelParser
-
-#     def __iter__(self):
-#         for data_obj in self.DataObjIter:
-#             yield self.DataParser(data_obj), self.LabelParser(data_obj)
-
-#     def __len__(self):
-#         assert self.ordered, "此数据读取器是无序的"
-#         return len(self.DataObjIter)
-
-#     def __getitem__(self, index):
-#         assert self.ordered, "此数据读取器是无序的"
-#         if isinstance(index,slice):
-#             data_objs = self.DataObjIter[index]
-#             return [(self.DataParser(data_obj), self.LabelParser(data_obj)) for data_obj in data_objs]
-#         else:
-#             data_obj = self.DataObjIter[index]
-#             return self.DataParser(data_obj), self.LabelParser(data_obj)
 class ShorterThanLabelError(Exception):
     pass
 
@@ -93,13 +65,13 @@ class DataGen4KerasCTC(Sequence):
                 label = self.LabelParser(data_obj)
                 if data.shape[0]//8 < len(label):
                     raise ShorterThanLabelError("音频长度%d//8 小于 标签长度%d"%(data.shape[0],len(label)))
-            except Exception as e:
-                print("\n=================\n出错data为:",data_obj.id)
+            except Exception:
+                print("\n=================\n出错data的id为:",data_obj.id)
                 if self.save_error_info:
-                    error_info.save_error_info(data_obj.id)
+                    error_info.save_error_info(data_obj)
                 if self.ignore_error:
                     print("\t****错误信息****")
-                    print(traceback.format_exc().replace('\n','\n\t'))
+                    print("\t"+traceback.format_exc().replace('\n','\n\t'))
                     print("\n=================\n")
                     continue
                 else:
@@ -134,7 +106,7 @@ class DataGen4KerasCTC(Sequence):
             for i, data in enumerate(datas_list):
                 padded_datas[i, : data.shape[0]] = data  
         else:
-            raise Exception("data shape ERROR")   
+            raise Exception("Data Dhape ERROR, padded_datas.ndim:%d, while data.ndim:%d"%(padded_datas.ndim,datas_list[0].ndim))
         return padded_datas, data_lengths
 
     @staticmethod
@@ -150,7 +122,7 @@ class DataGen4KerasCTC(Sequence):
 
 
 class KerasCTCBaseModel():
-    def __init__(self, name, DataParser: BaseDataParser, LabelParser: BaseLabelParser, save_dir='saved_model'):
+    def __init__(self, name:str, DataParser: BaseDataParser, LabelParser: BaseLabelParser, save_dir='saved_model'):
         self.name = name
         self.DataParser = DataParser
         self.LabelParser = LabelParser
@@ -167,12 +139,6 @@ class KerasCTCBaseModel():
         self.predict_model._make_predict_function()
 
     @abstractmethod
-    def _get_attr_dict4subdir(self):
-        return {
-            'gpu_n':self.gpu_num,
-        }
-
-    @abstractmethod
     def main_structure(self, input_layername):
         '''input_keras_layer -> softmax_out_layer'''
 
@@ -180,6 +146,10 @@ class KerasCTCBaseModel():
 
     # def edit_distance()
     # tf.edit_distance
+
+    def _capture_summary(self,s):
+        self.model_summary += (s+'\n')
+        print(s)
 
     def create_model(self):
         # from keras import Model,Input,
@@ -210,7 +180,10 @@ class KerasCTCBaseModel():
 
         model = Model([input_data, label, data_lengths,
                        label_lenghts], loss_out)
-        model.summary()
+
+        self.model_summary = ''
+        print_summary(model,print_fn=self._capture_summary)
+        # model.summary()
 
         return model, predict_model
     
@@ -258,37 +231,34 @@ class KerasCTCBaseModel():
                         self.DataParser,
                         self.LabelParser
                     )
-    def _save_summary_infos(self,data_name,train_DataObjIter,dev_DataObjIter,batch_size,epochs):
-        assert self.cur_save_dir is not None
-        infos_dict = self._get_attr_dict4subdir()
-        infos_dict.update( {
+
+    @abstractmethod
+    def _create_fit_infos_dict(self,data_name,train_DataObjIter,dev_DataObjIter,batch_size,epochs):
+        fit_infos_dict = {
+            'gpu_n':self.gpu_num,
             'data_name': data_name,
             'train_data_num':len(train_DataObjIter),
             'dev_data_num':len(dev_DataObjIter),
-            'feature':self.DataParser.feature,
-            'label_type':self.LabelParser.label_type,
             'ModelOBJ_name':self.__class__.__name__,
             'model_name':self.name,
             'max_epochs':epochs,
             'batch_size':batch_size,
-            'cur_model_savedir':self.cur_save_dir,
-            'load_weight_path':self.load_weight_path
-        } )
-        info_str = '=====模型信息=====\n'
-        for k,v in infos_dict.items():
-            info_str += "%s:%s\n"%(k,v)
-        info_str += '================='
-        with open(os.path.join(self.cur_save_dir,"infos.txt"),'a') as f:
-            f.write(info_str)
-        print("@模型保存主文件夹:%s\n\t当前模型保存文件夹:%s"%(self.main_save_dir,self.cur_save_dir))
+            'load_weight_path':self.load_weight_path,
+            'main_save_dir':self.main_save_dir,
+        }
+
+        abstract_infos_dict = {
+            'gpu_n':self.gpu_num,
+        }
+        return fit_infos_dict,abstract_infos_dict
     
-        print("@训练集数据数:",len(train_DataObjIter))
-        print("@验证机数据数:",len(dev_DataObjIter))
-    
-    def _get_model_savedir(self,data_name):
+    def _prepare_fit(self,data_name,train_DataObjIter,dev_DataObjIter,batch_size,epochs):
+
+        fit_infos_dict,abstract_infos_dict = self._create_fit_infos_dict(data_name,train_DataObjIter,dev_DataObjIter,batch_size,epochs)
+
         sub_dir = data_name
-        attr_sub_dir =''
-        for k,v in self._get_attr_dict4subdir().items():
+        attr_sub_dir = ''
+        for k,v in abstract_infos_dict.items():
             attr_sub_dir += '(%s=%s)'%(k,v)
         cur_model_savedir = os.path.join(self.main_save_dir,self.name,sub_dir,attr_sub_dir)
         base_len = len(cur_model_savedir)
@@ -296,12 +266,31 @@ class KerasCTCBaseModel():
         while os.path.exists(cur_model_savedir):
             cur_model_savedir = cur_model_savedir[:base_len] + '_%d'%_i
             _i += 1
+        
+        fit_infos_dict['cur_model_savedir'] = cur_model_savedir
+
+        info_str = '=====模型信息=====\n'
+        for k,v in fit_infos_dict.items():
+            info_str += "%s:%s\n"%(k,v)
+        info_str += '=================\n'
+        print(info_str)
+        input("请确认模型信息,按任意键继续...")
+        print("创建目录:",cur_model_savedir)
         os.makedirs(cur_model_savedir)
-        return cur_model_savedir
+        with open(os.path.join(cur_model_savedir,"infos.txt"),'a') as f:
+            print("写入infos.txt")
+            f.write(info_str)
+            f.write(self.model_summary)
+        
+        
+        # print("@模型保存主文件夹:%s\n\t当前模型保存文件夹:%s"%(self.main_save_dir,cur_model_savedir))
+        # print("@训练集数据数:",len(train_DataObjIter))
+        # print("@验证机数据数:",len(dev_DataObjIter))
+
+        self.cur_save_dir =  cur_model_savedir
 
     def fit(self,data_name:str, train_DataObjIter, dev_DataObjIter, batch_size, epochs,patience = 20):
-        self.cur_save_dir = self._get_model_savedir(data_name)
-        self._save_summary_infos(data_name,train_DataObjIter, dev_DataObjIter,batch_size,epochs)
+        self._prepare_fit(data_name,train_DataObjIter,dev_DataObjIter,batch_size,epochs)
 
         from keras.callbacks import EarlyStopping, ModelCheckpoint
 
@@ -381,7 +370,7 @@ class KerasCTCBaseModel():
     
     def load_weight(self, load_weight_path):
         self.load_weight_path = load_weight_path
-        self.model.load_weights(load_weight_path)
+        self.model.load_weights(load_weight_path,by_name=True)
 
     @staticmethod
     def plot_history(history, model_savepath):

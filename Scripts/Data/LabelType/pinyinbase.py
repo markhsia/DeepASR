@@ -1,7 +1,7 @@
 from pypinyin import pinyin, Style,load_single_dict
-
 import json
 import os
+
 SAVE_DIR = os.path.dirname(__file__)
 PinYinTable_fp = os.path.join(SAVE_DIR, 'PinYinTable_modern.csv')
 pinyin2num_dict_fp = os.path.join(SAVE_DIR, 'pinyin2num_dict.json')

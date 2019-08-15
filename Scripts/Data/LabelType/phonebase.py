@@ -5,7 +5,7 @@ SAVE_DIR = os.path.dirname(__file__)
 py2phones_dict_fp = os.path.join(SAVE_DIR, 'py2phones_dict.json')
 phone2num_sdict_fp = os.path.join(SAVE_DIR, 'phone2num_sdict.json')
 phone2num_dict_fp = os.path.join(SAVE_DIR, 'phone2num_dict.json')
-PinYinTable_fp = os.path.join(SAVE_DIR, 'PinYinTable.csv')
+PinYinTable_fp = os.path.join(SAVE_DIR, 'PinYinTable_modern.csv')
 
 def prepare_phonebase():
     tables = []

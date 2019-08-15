@@ -212,13 +212,14 @@ class CNN1d_CTC_Phone_RealSample(AcousticModel):
         
         input_data = Input(name=input_layername, shape=(None,self.DataParser.AUDIO_FEATURE_LENGTH))
 
-        x = Conv1D(filters=96,kernel_size=5, padding="same",activation="relu", kernel_initializer="he_normal")(input_data)
+        x = Conv1D(filters=96,kernel_size=7, padding="same",activation="relu", kernel_initializer="he_normal")(input_data)
         x = BatchNormalization()(x)
         x = MaxPooling1D()(x)
-        x = Conv1D(128, 3, padding="same",activation="relu", kernel_initializer="he_normal")(x)
+        x = Conv1D(128, 5, padding="same",activation="relu", kernel_initializer="he_normal")(x)
         x = BatchNormalization()(x)
         x = Conv1D(256, 3, padding="same",activation="relu", kernel_initializer="he_normal")(x)
-        x = Dense(256, activation="relu", kernel_initializer="he_normal")(x)
+        x = Conv1D(256, 3, padding="same",activation="relu", kernel_initializer="he_normal")(x)
+        x = Dense(512, activation="relu", kernel_initializer="he_normal")(x)
         x = Dropout(0.5)(x)
         x = Dense(self.LabelParser.LABEL_NUM)(x)
         softmax_out = Activation('softmax', name='softmax_out')(x)

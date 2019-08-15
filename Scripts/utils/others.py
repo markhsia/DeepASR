@@ -7,8 +7,12 @@ import traceback
 from tqdm import tqdm
 
 AUDIO_TYPEs = ('.wav','.mp3','.aac')
-def make_AuDataObjs_gen(DataObj_class: AuDataObj, paths: list([str]), ignore_error_history = True):
-    error_datainfos = None if ignore_error_history else ERROR_DATA_INFO().error_infos
+def make_AuDataObjs_gen(DataObj_class: AuDataObj, paths: list([str]), ignore_error_history = False):
+    if ignore_error_history:
+        error_datainfos = None 
+    else:
+        print("跳过错误数据信息表里的数据...")
+        error_datainfos = ERROR_DATA_INFO().error_infos
     for fp in walk_subfiles(paths):
         if os.path.splitext(fp)[1] in AUDIO_TYPEs:
             if ignore_error_history or (fp not in error_datainfos):
@@ -18,7 +22,7 @@ def make_AuDataObjs_list(DataObj_class: AuDataObj, paths: list([str])):
     return [data_obj for data_obj in make_AuDataObjs_gen(DataObj_class, paths)]
 
 class ERROR_DATA_INFO:
-    def __init__(self,error_info_save_fp:str = 'ERROR_DATA_INFOs.csv'):
+    def __init__(self,error_info_save_fp:str = 'ERRPR_DATA_INFOs.jsons'):
 
         if not os.path.exists(error_info_save_fp):
             with open(error_info_save_fp,'w',encoding = 'utf-8') as f:
@@ -26,24 +30,27 @@ class ERROR_DATA_INFO:
         self.error_info_save_fp = error_info_save_fp
         self.error_infos = self.load_error_infos()
 
-    def save_error_info(self,data_id):
+
+    def save_error_info(self,data_obj):
         exc_type, exc_value, exc_traceback = sys.exc_info()
-        cur_error_infos = (data_id,exc_type.__name__,str(exc_value),traceback.format_exc())
-        if data_id not in self.error_infos:
-            self.error_infos[data_id] = cur_error_infos[1:]
+        cur_error_infos = (data_obj.id,data_obj.__class__.__name__,exc_type.__name__,str(exc_value),traceback.format_exc())
+        if data_obj.id not in self.error_infos:
+            self.error_infos[data_obj.id] = cur_error_infos[1:]
             print("\t保存错误信息到:",self.error_info_save_fp)
             with open(self.error_info_save_fp,'a',encoding = 'utf-8') as f:
                 f.write(json.dumps(cur_error_infos)+'\n')
         else:
             print("错误的data_id已存在")
-            assert self.error_infos[data_id][0] == exc_type.__name__,"%s %s\n != %s\n"%(data_id,str(self.error_infos[data_id]),str(cur_error_infos[1:]))
+            assert self.error_infos[data_obj.id][1] == exc_type.__name__,"%s %s\n != %s\n"%(data_obj.id,str(self.error_infos[data_obj.id]),str(cur_error_infos[1:]))
 
     def load_error_infos(self):
         error_datainfos = dict()
+        print("载入%s文件中的错误data信息..."%self.error_info_save_fp)
         with open(self.error_info_save_fp,'r',encoding='utf-8') as f:
             for line in f:
-                data_id,errortype,errorstr,desc = json.loads(line)
-                error_datainfos[data_id] = (errortype,errorstr,desc)
+                data_id,data_type,errortype,errorstr,desc = json.loads(line)
+                error_datainfos[data_id] = (data_type,errortype,errorstr,desc)
+        print("共载入%d条"%len(error_datainfos))
         return error_datainfos
 
 def test_dataObjs(DataObjs,dataparser,labelparser,error_info_save_fp):
@@ -69,7 +76,7 @@ def test_dataObjs(DataObjs,dataparser,labelparser,error_info_save_fp):
                 print("出错数据shape:",data.shape if data else None)
                 print("出错数据parsed_label为:",label)
                 print("出错数据文字为:",data_obj._get_one_text(data_obj.filepath))
-                print("出错数据label为:",data_obj.get_label())
+                print("出错数据label为:",data_obj.get_label(labelparser.label_type))
             except:
                 pass
             print("\t****错误信息****")
