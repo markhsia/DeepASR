@@ -27,7 +27,7 @@ if __name__ == '__main__':
         debug_model_save_dir = 'debug/saved_models',
         debug_epochs = 5,
         )
-    trainer.train_and_test(load_weight_path=None)
+    # trainer.train_and_test(load_weight_path=None)
     # load_weight_path = "/home/A/Work/Speech/MyASR/saved_models/CNN1d_CTC_PinYin_Sample(AiShell)/(gpu_n=1)(feature_name=mel)(label_type=pinyin)/final(epoch=119)(loss=2.4)(val_loss=18.0).keras_weight"
     # trainer.load_and_test(load_weight_path=load_weight_path)
     # trainer.manully_test(['/home/A/Work/Speech/MyDeepASR_old/datas/mytest_t/'],load_weight_path = load_weight_path)

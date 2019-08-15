@@ -48,12 +48,12 @@ class AcousticModel(KerasCTCBaseModel):
         print('\n验证（共%d个音频)' % (len(test_DataObjIter)))
         print('验证loss:', self.model.evaluate_generator(generator=test_batch_gen))        
     
-    def test_detail(self,test_DataObjIter):
+    def test_detail(self,test_DataObjIter,greedy=True, beam_width=100):
         wer_sum = 0
         test_n = len(test_DataObjIter)
         for data_obj in test_DataObjIter:
             true_label = data_obj.get_label(self.LabelParser.label_type)
-            pred_label = self.predict(data_obj)
+            pred_label = self.predict(data_obj,greedy, beam_width)
             print('\n==========')
             print('识别音频文件：%s' % data_obj.filepath)
             print('正确结果:', ' '.join(true_label))
@@ -65,11 +65,11 @@ class AcousticModel(KerasCTCBaseModel):
         if test_n>1:
             print("平均字错误率:",wer_sum/test_n)
     
-    def test_wer(self,test_DataObjIter):
+    def test_wer(self,test_DataObjIter,greedy=True, beam_width=100):
         wer_sum = 0
-        for data_obj in test_DataObjIter:
+        for data_obj in tqdm(test_DataObjIter):
             true_label = data_obj.get_label(self.LabelParser.label_type)
-            pred_label = self.predict(data_obj)        
+            pred_label = self.predict(data_obj,greedy, beam_width)        
             w = wer(true_label,pred_label)
             wer_sum += w
         print("平均字错误率:",wer_sum/len(test_DataObjIter))

@@ -31,6 +31,6 @@ if __name__ == '__main__':
         debug_epochs = 5,
         )
     # trainer.train_and_test(load_weight_path=None)
-    load_weight_path = "saved_models/CNN1d_CTC_PinYin_Sample_lessDropout/MagicData/(gpu_n=1)(feature_name=mel)(label_type=pinyin)_1/best_val_loss(epoch=70)(loss=7.7)(val_loss=10.5).keras_weight"
-    trainer.load_and_test(load_weight_path=load_weight_path)
+    load_weight_path = "saved_models/CNN1d_CTC_PinYin_Sample_lessDropout/MagicData/(gpu_n=1)(feature_name=mel)(label_type=pinyin)/best_val_loss(epoch=70)(loss=7.7)(val_loss=10.5).keras_weight"
+    trainer.load_and_test(load_weight_path=load_weight_path,wer_test_n=100,greedy=False,beam_width=20)
     # trainer.manully_test(['/home/A/Work/Speech/MyDeepASR_old/datas/mytest_t/'],load_weight_path = load_weight_path)

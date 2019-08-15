@@ -2,10 +2,10 @@ import json
 import os
 SAVE_DIR = os.path.dirname(__file__)
 
-py2phones_dict_fp = os.path.join(SAVE_DIR, 'py2phones_dict.json')
-phone2num_sdict_fp = os.path.join(SAVE_DIR, 'phone2num_sdict.json')
-phone2num_dict_fp = os.path.join(SAVE_DIR, 'phone2num_dict.json')
-PinYinTable_fp = os.path.join(SAVE_DIR, 'PinYinTable_modern.csv')
+py2phones_dict_fp = os.path.join(SAVE_DIR, 'py2phones_dict.json') #拼音-->音素 字典
+phone2num_sdict_fp = os.path.join(SAVE_DIR, 'phone2num_sdict.json') # 音素-->数字 字典。按辅音元音分类储存，但是训练、预测时没有实际用到
+phone2num_dict_fp = os.path.join(SAVE_DIR, 'phone2num_dict.json') # 音素-->数字 字典。训练、预测时需用到的
+PinYinTable_fp = os.path.join(SAVE_DIR, 'PinYinTable_modern.csv') # 拼音与音素原始表，若不存在上述文件，则根据此表生成
 
 def prepare_phonebase():
     tables = []
@@ -51,6 +51,7 @@ def prepare_phonebase():
         print("保存phone2num_sdict,共%d个辅音，%dx5个元音（每个包含5声调）%d个静音" % (len(phone2num_sdict['consonant']), len(
             phone2num_sdict['vowel'])/5, len(phone2num_sdict['silence'])))
         json.dump(phone2num_sdict, f)
+
     with open(phone2num_dict_fp, 'w', encoding='utf8') as f:
         print("保存phone2num_dict,共%d个音" % (len(phone2num_dict)))
         json.dump(phone2num_dict, f)

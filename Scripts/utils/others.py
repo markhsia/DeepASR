@@ -5,27 +5,11 @@ import json
 import sys
 import traceback
 from tqdm import tqdm
-
-AUDIO_TYPEs = ('.wav','.mp3','.aac')
-def make_AuDataObjs_gen(DataObj_class: AuDataObj, paths: list([str]), ignore_error_history = False):
-    if ignore_error_history:
-        error_datainfos = None 
-    else:
-        print("跳过错误数据信息表里的数据...")
-        error_datainfos = ERROR_DATA_INFO().error_infos
-    for fp in walk_subfiles(paths):
-        if os.path.splitext(fp)[1] in AUDIO_TYPEs:
-            if ignore_error_history or (fp not in error_datainfos):
-                yield DataObj_class(filepath=fp)
-
-def make_AuDataObjs_list(DataObj_class: AuDataObj, paths: list([str])):
-    return [data_obj for data_obj in make_AuDataObjs_gen(DataObj_class, paths)]
-
 class ERROR_DATA_INFO:
-    def __init__(self,error_info_save_fp:str = 'ERRPR_DATA_INFOs.jsons'):
+    def __init__(self,error_info_save_fp:str = 'ERROR_DATA_INFOs.jsons'):
 
         if not os.path.exists(error_info_save_fp):
-            with open(error_info_save_fp,'w',encoding = 'utf-8') as f:
+            with open(error_info_save_fp,'w',encoding = 'utf-8'):
                 pass
         self.error_info_save_fp = error_info_save_fp
         self.error_infos = self.load_error_infos()
@@ -53,6 +37,23 @@ class ERROR_DATA_INFO:
         print("共载入%d条"%len(error_datainfos))
         return error_datainfos
 
+error_data_info_obj = ERROR_DATA_INFO()
+AUDIO_TYPEs = ('.wav','.mp3','.aac')
+def make_AuDataObjs_gen(DataObj_class: AuDataObj, paths: list([str]), ignore_error_history = False):
+    if ignore_error_history:
+        error_datainfos = None 
+    else:
+        print("跳过错误数据信息表里的数据...")
+        error_datainfos = error_data_info_obj.error_infos
+    for fp in walk_subfiles(paths):
+        if os.path.splitext(fp)[1] in AUDIO_TYPEs:
+            if ignore_error_history or (fp not in error_datainfos):
+                yield DataObj_class(filepath=fp)
+
+def make_AuDataObjs_list(DataObj_class: AuDataObj, paths: list([str])):
+    return [data_obj for data_obj in make_AuDataObjs_gen(DataObj_class, paths)]
+
+
 def test_dataObjs(DataObjs,dataparser,labelparser,error_info_save_fp):
     # 直接执行此文件将遍历测试一遍所有的数据，
     # 有问题的单个数据id会自动被ERROR_DATA_INFO类持久化记录下来到一个文件中去，以后make_AuDataObjs_list载入时可选择略过
@@ -69,7 +70,7 @@ def test_dataObjs(DataObjs,dataparser,labelparser,error_info_save_fp):
             label = labelparser(data_obj)
             if data.shape[0]//8 < len(label):
                 raise ShorterThanLabelError("音频长度%d//8 小于 标签长度%d"%(data.shape[0],len(label)))
-        except Exception as e:
+        except Exception:
             print("\n=================\n出错data为:",data_obj.id)
             error_info.save_error_info(data_obj.id)
             try:

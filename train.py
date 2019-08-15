@@ -68,7 +68,7 @@ class AcousticTrainer:
         print('\n自定义识别:', ' '.join(res))
 
 
-    def load_and_test(self, load_weight_path = None):
+    def load_and_test(self, load_weight_path = None,wer_test_n = 100,greedy=True, beam_width=100):
         if load_weight_path:
             self.model_obj.load_weight(load_weight_path)
             print("读取模型权重:",load_weight_path)
@@ -79,18 +79,19 @@ class AcousticTrainer:
         self.model_obj.test(self.dev_DataObjs, batch_size=16, pre_n=1)
         print("\n测试测试集")
         self.model_obj.test(self.test_DataObjs, batch_size=16, pre_n=1)
-        print("\n测试训练集100个WER")
-        self.model_obj.test_wer(self.train_DataObjs[:100])
-        print("\n测试验证集100个WER")
-        self.model_obj.test_wer(self.dev_DataObjs[:100])
-        print("\n测试测试集100个WER")
-        self.model_obj.test_wer(self.test_DataObjs[:100])
+        print("\n测试训练集%d个WER"%wer_test_n)
+        self.model_obj.test_wer(self.train_DataObjs[:wer_test_n],greedy, beam_width)
+        print("\n测试验证集%d个WER"%wer_test_n)
+        self.model_obj.test_wer(self.dev_DataObjs[:wer_test_n],greedy, beam_width)
+        print("\n测试测试集%d个WER"%wer_test_n)
+        self.model_obj.test_wer(self.test_DataObjs[:wer_test_n],greedy, beam_width)
 
         res = self.model_obj.predict(PureAcousticData(
             "/home/A/Work/Speech/MyDeepASR_old/datas/mytest_t/A11_0.wav"))
         print('\n自定义识别:', ' '.join(res))
     
     def manully_test(self,data_paths, load_weight_path = None ):
+        '''data_paths:包含自定义音频的文件路径或目录路径的列表,该路径列表将由make_AuDataObjs_list处理'''
         if load_weight_path:
             self.model_obj.load_weight(load_weight_path)
             print("读取模型权重:",load_weight_path)        

@@ -312,7 +312,8 @@ class KerasCTCBaseModel():
                 filepath=best_val_loss_model_savepath+'_weight',
                 monitor='val_loss',
                 save_best_only=True,
-                save_weights_only=True
+                save_weights_only=True,
+                verbose=1
             )
         ]
         # try:
@@ -347,24 +348,24 @@ class KerasCTCBaseModel():
         print('验证（共%d个数据)' % (len(test_DataObjIter)))
         print('验证loss:', self.model.evaluate_generator(generator=test_batch_gen))
 
-    def predict(self,data_obj: DataObj):
+    def predict(self, data_obj: DataObj, greedy=True, beam_width=100):
         # padded_datas,data_lengths = DataGen4KerasCTC._parse_datas4ctc([self.DataParser(data_obj)])
         data_batch_gen = self._batch_gen4DataObjIter([data_obj],batch_size = 1)
         for inputs,_ in data_batch_gen:
             softmax_out = self.predict_model.predict(inputs[PADDED_DATAS_NAME])
             
-            encoded_label = self._keras_ctc_decode(softmax_out,inputs[DATA_LENGTHS_NAME])
+            encoded_label = self._keras_ctc_decode(softmax_out,inputs[DATA_LENGTHS_NAME],greedy,beam_width)
             decoded_label = self.LabelParser.decode_label(encoded_label)
             return decoded_label
     
     @staticmethod
-    def _keras_ctc_decode(softmax_out,data_lengths):
+    def _keras_ctc_decode(softmax_out,data_lengths,greedy=True, beam_width=100):
         max_out_len = softmax_out.shape[1]
         max_data_len = data_lengths.max()
         out_lenghts = np.squeeze(np.round(data_lengths*max_out_len/max_data_len),axis=-1)
         from keras import backend as K
         res = K.ctc_decode(y_pred=softmax_out, input_length=out_lenghts,
-                           greedy=True, beam_width=100, top_paths=1)
+                           greedy=greedy, beam_width=beam_width, top_paths=1)
         decoded_pred = K.get_value(res[0][0])[0]
         return decoded_pred
     
@@ -484,13 +485,14 @@ class MyModelCheckpoint(Callback):
                                   % (epoch + 1, self.monitor, self.best,
                                      current, filepath))
                         self.best = current
-                        if self.last_filepath is not None:
-                            os.remove(self.last_filepath)
-                        self.last_filepath = filepath
+
                         if self.save_weights_only:
                             self.model.save_weights(filepath, overwrite=True)
                         else:
                             self.model.save(filepath, overwrite=True)
+                        if self.last_filepath is not None:
+                            os.remove(self.last_filepath)
+                        self.last_filepath = filepath
                     else:
                         if self.verbose > 0:
                             print('\nEpoch %05d: %s did not improve from %0.5f' %
@@ -502,6 +504,7 @@ class MyModelCheckpoint(Callback):
                     self.model.save_weights(filepath, overwrite=True)
                 else:
                     self.model.save(filepath, overwrite=True)
+
 def _get_batchsize(x):
     if x is None or len(x) == 0:
         # Handle data tensors support when no input given

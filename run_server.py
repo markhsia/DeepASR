@@ -1,6 +1,4 @@
 from Scripts.Server.Server import Server
-from Scripts.Data.AcousticData import PureAcousticData
-from Scripts.Models.DataParsers.AcousticParser import AcousticDataParser, AcousticLabelParser
 from Scripts.Models.CNN1d_CTC import CNN1d_CTC_PinYin_Sample_lessDropout
 from config import model_save_dir, cache_dir, feature, stft_fea, mel_fea, label_type
 

@@ -3,8 +3,9 @@ import json
 import os
 
 SAVE_DIR = os.path.dirname(__file__)
-PinYinTable_fp = os.path.join(SAVE_DIR, 'PinYinTable_modern.csv')
-pinyin2num_dict_fp = os.path.join(SAVE_DIR, 'pinyin2num_dict.json')
+pinyin2num_dict_fp = os.path.join(SAVE_DIR, 'pinyin2num_dict.json') # 拼音-->数字 字典。
+PinYinTable_fp = os.path.join(SAVE_DIR, 'PinYinTable_modern.csv')# 拼音与音素原始表，若不存在上述文件，则根据此表生成
+
 if os.path.basename(PinYinTable_fp) == 'PinYinTable_classic.csv':
     load_single_dict({
         ord('嗯'):'en2',
