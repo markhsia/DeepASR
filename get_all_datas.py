@@ -61,7 +61,7 @@ for DataOBJ,path in (
     
 
 if __name__ == '__main__':
-    from config import model_save_dir, cache_dir, feature, stft_fea, mel_fea, label_type,batch_size
+    from config import model_save_dir, cache_dir, feature, stft_fea, mel_fea, label_type, batch_size
     from Scripts.Models.DataParsers.AcousticParser import AcousticDataParser, AcousticLabelParser
     dataparser = AcousticDataParser(feature=mel_fea, cache_dir=cache_dir)
     labelparser = AcousticLabelParser(label_type=label_type)

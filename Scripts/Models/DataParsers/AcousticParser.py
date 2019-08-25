@@ -26,7 +26,12 @@ class AcousticDataParser(BaseDataParser):
 
     def __init__(self, feature:dict, cache_dir:str=None, open_cache=True, re_cache=False):
         '''
-        feature : {'name':feature_name, 'kwargs':feature_func_kwargs, 'feature_length':int}
+        feature : {'name':feature_name(str), 'kwargs':feature_func_kwargs(dict), 'feature_length':(int)}
+        其中feature_func_kwargs = {
+            'kwarg1':kwarg1,
+            'kwarg2':kwarg2,
+            ...
+            }
 
         重要属性:self.AUDIO_FEATURE_LENGHT
         '''
